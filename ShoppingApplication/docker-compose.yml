@@ -1,0 +1,72 @@
+version: '3.9'
+services:
+  product-service:
+    image: product_image
+    container_name: product-service
+    build: UserProductService/
+    restart: always
+    networks:
+      - product-network
+    ports:
+      - 8097:8097
+    depends_on:
+      - mongo-service1
+      - spring-cloud-api-gateway
+      - eureka-service2
+
+  mongo-service1:
+    image: mongo
+    container_name: mongo-service1
+    ports:
+      - 27017:27017
+    networks:
+      - product-network
+
+  authentication-service:
+    image: authentication_image
+    container_name: authentication-service
+    build: UserAuthenticationService/
+    restart: always
+    networks:
+      - product-network
+    ports:
+      - 8089:8089
+    depends_on:
+      - mysql-service1
+      - spring-cloud-api-gateway
+      - eureka-service2
+
+  mysql-service1:
+    image: mysql:latest
+    container_name: mysql-service1
+    networks:
+      - product-network
+    ports:
+      - 3306:3306
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+
+  spring-cloud-api-gateway:
+    container_name: spring-cloud-api-gateway
+    build: SpringCloudAPIGateway/
+    networks:
+      - product-network
+    ports:
+      - 9500:9500
+
+  eureka-service2:
+    container_name: eureka-service2
+    build: EurekaServer/
+    restart: always
+    networks:
+      - product-network
+    ports:
+      - 8761:8761
+
+networks:
+  product-network:
+    driver: bridge
